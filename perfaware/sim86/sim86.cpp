@@ -32,6 +32,7 @@ static void DisAsm8086(memory *Memory, u32 DisAsmByteCount, segmented_access Dis
         instruction Instruction = DecodeInstruction(&Context, Memory, &At);
         if(Instruction.Op)
         {
+
             if(Count >= Instruction.Size)
             {
                 Count -= Instruction.Size;
@@ -43,6 +44,14 @@ static void DisAsm8086(memory *Memory, u32 DisAsmByteCount, segmented_access Dis
             }
             
             UpdateContext(&Context, Instruction);
+            
+            switch(Instruction.Op) {
+                case Op_mov: 
+                    break;
+                default:
+                    break;
+            }
+
             if(IsPrintable(Instruction))
             {
                 PrintInstruction(Instruction, stdout);
