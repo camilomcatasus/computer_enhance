@@ -15,17 +15,40 @@
 #include "sim86_memory.h"
 #include "sim86_text.h"
 #include "sim86_decode.h"
+#include "sim86_simulate.h"
 
 #include "sim86_memory.cpp"
 #include "sim86_text.cpp"
 #include "sim86_decode.cpp"
+
+void SimulateInstruction(sim_context SimContext, instruction Instruction) {
+    switch (Instruction.Op) {
+        case Op_mov: {
+            u8 base_register = 0;
+            switch (Instruction.Operands[0].Type) {
+                case Operand_Register: {
+
+                } break;
+                case Operand_Memory: {
+
+                } break;
+                default: {
+                    fprintf(stderr, "ERROR: Did not expect operand type in instruction");
+                } break;
+            }
+        } break;
+
+        default:
+            break;
+    }
+}
 
 static void DisAsm8086(memory *Memory, u32 DisAsmByteCount, segmented_access DisAsmStart)
 {
     segmented_access At = DisAsmStart;
     
     disasm_context Context = DefaultDisAsmContext();
-    
+    sim_context SimContext = sim_context {}; 
     u32 Count = DisAsmByteCount;
     while(Count)
     {
@@ -44,13 +67,7 @@ static void DisAsm8086(memory *Memory, u32 DisAsmByteCount, segmented_access Dis
             }
             
             UpdateContext(&Context, Instruction);
-            
-            switch(Instruction.Op) {
-                case Op_mov: 
-                    break;
-                default:
-                    break;
-            }
+            SimulateInstruction(SimContext, Instruction);
 
             if(IsPrintable(Instruction))
             {
@@ -65,6 +82,9 @@ static void DisAsm8086(memory *Memory, u32 DisAsmByteCount, segmented_access Dis
         }
     }
 }
+
+
+
 
 int main(int ArgCount, char **Args)
 {
