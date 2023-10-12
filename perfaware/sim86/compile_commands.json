@@ -1,0 +1,11 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "sim86.cpp"
+    ],
+    "directory": "/mnt/c/Users/ccatas/Documents/GitHub/rust/computer_enhance/perfaware/sim86",
+    "file": "/mnt/c/Users/ccatas/Documents/GitHub/rust/computer_enhance/perfaware/sim86/sim86.cpp"
+  }
+]
