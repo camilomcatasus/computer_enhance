@@ -2,23 +2,18 @@
 #include <ostream>
 #include <stdio.h>
 
+
+
 struct sim_context {
-    u16 registers[15] = {0};
+    u16 registers[16] = {0};
 };
 
 
 
 void PrintContext(sim_context simContext) {
+    const char* RegNames[16]  = { "none", "a", "b", "c", "d", "sp", "bp", "si", "di", "es", "cs", "ss", "ds", "ip", "flags", "count" };
     printf("Registers\n");
-    printf("- ax: %#06x\n", simContext.registers[1]);
-    printf("- bx: %#06x\n", simContext.registers[2]);
-    printf("- cx: %#06x\n", simContext.registers[3]);
-    printf("- dx: %#06x\n", simContext.registers[4]);
-    printf("- sp: %#06x\n", simContext.registers[5]);
-    printf("- dp: %#06x\n", simContext.registers[6]);
-    printf("- si: %#06x\n", simContext.registers[7]);
-    printf("- di: %#06x\n", simContext.registers[8]);
-    printf("- es: %#06x\n", simContext.registers[9]);
-    printf("- ss: %#06x\n", simContext.registers[10]);
-    printf("- ds: %#06x\n", simContext.registers[11]);
+    for(int i = 1; i < 16; i++) {
+        printf("- %s: %#06x\n", RegNames[i], simContext.registers[i]);
+    }
 }

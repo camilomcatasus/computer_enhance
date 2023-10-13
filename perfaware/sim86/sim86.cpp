@@ -11,6 +11,7 @@
    ======================================================================== */
 
 #include "sim86.h"
+#include <string>
 #include <vector>
 
 /* NOTE(casey): _CRT_SECURE_NO_WARNINGS is here because otherwise we cannot
@@ -32,7 +33,7 @@
 #include "sim86_memory.h"
 #include "sim86_text.h"
 #include "sim86_decode.h"
-
+#include "sim86_simulate.h"
 #include "sim86_instruction.cpp"
 #include "sim86_instruction_table.cpp"
 #include "sim86_memory.cpp"
@@ -118,7 +119,79 @@ static std::vector<instruction> DisAsm8086(u32 DisAsmByteCount, segmented_access
     return Instructions;
 }
 
+u16 GetOperandValue(sim_context* SimContext, instruction_operand Operand) {
+    u16 return_val = 0x0;
+
+    switch (Operand.Type) {
+        case Operand_Register: {
+            u16 temp_val = SimContext->registers[Operand.Register.Index] >> (8 * Operand.Register.Offset);
+            if(Operand.Register.Count == 1)
+                temp_val = temp_val & 0b11111111;
+            return_val = temp_val;
+            
+        } break;
+        case Operand_Immediate: {
+                return_val = Operand.Immediate.Value;
+            
+        } break;
+        default: break;
+    }
+
+    return return_val;
+}
+
+void SetRegisterValue(sim_context* SimContext, register_access RegisterAccess, u16 value) {
+    u16 temp_val = value;
+    u16 old_val = SimContext->registers[RegisterAccess.Index];
+    if(RegisterAccess.Count == 1)
+    {
+        SimContext->registers[RegisterAccess.Index] = SimContext->registers[RegisterAccess.Index] & (0b11111111 << (8 * (1 - RegisterAccess.Offset)));
+        SimContext->registers[RegisterAccess.Index] = SimContext->registers[RegisterAccess.Index] | (value << (8 * RegisterAccess.Offset));
+    }
+    else
+    {
+        SimContext->registers[RegisterAccess.Index] = value;
+    }
+
+    const char* RegNames[16]  = { "none", "a", "b", "c", "d", "sp", "bp", "si", "di", "es", "cs", "ss", "ds", "ip", "flags", "count" };
+    
+    printf("%s 0x%x->0x%x\n", RegNames[RegisterAccess.Index], old_val, SimContext->registers[RegisterAccess.Index]);
+}
+
+void SimulateInstruction(sim_context* SimContext, instruction Instruction) {
+    switch (Instruction.Op) {
+        case Op_mov: {
+            u8 base_register = 0;
+            u16 load_value = GetOperandValue(SimContext, Instruction.Operands[1]);
+            switch (Instruction.Operands[0].Type) {
+                case Operand_Register: {
+                    SetRegisterValue(SimContext, Instruction.Operands[0].Register, load_value);
+                } break;
+                case Operand_Memory: {
+
+                } break;
+                default: {
+                    fprintf(stderr, "ERROR: Did not expect operand type in instruction");
+                } break;
+            }
+        } break;
+
+        default:
+            break;
+    }
+}
+
 void Simulate(std::vector<instruction> Instructions) {
+    sim_context SimContext; 
+    const u32 IP_INDEX = 13;
+    
+    while(SimContext.registers[IP_INDEX] != Instructions.size())
+    {
+        SimulateInstruction(&SimContext, Instructions[SimContext.registers[IP_INDEX]]);
+        SimContext.registers[IP_INDEX] += 1;
+    }
+
+    PrintContext(SimContext);
 }
 
 int main(int ArgCount, char **Args)
@@ -136,6 +209,7 @@ int main(int ArgCount, char **Args)
                 printf("; %s disassembly:\n", FileName);
                 printf("bits 16\n");
                 std::vector<instruction> Instructions = DisAsm8086(BytesRead, MainMemory, true);
+                Simulate(Instructions);
             }
         }
         else
