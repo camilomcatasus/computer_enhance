@@ -11,6 +11,7 @@
    ======================================================================== */
 
 #include "sim86.h"
+#include <vector>
 
 /* NOTE(casey): _CRT_SECURE_NO_WARNINGS is here because otherwise we cannot
    call fopen(). If we replace fopen() with fopen_s() to avoid the warning,
@@ -78,12 +79,12 @@ static segmented_access AllocateMemoryPow2(u32 SizePow2)
     return Result;
 }
 
-static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
+static std::vector<instruction> DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart, bool verbose)
 {
     segmented_access At = DisAsmStart;
     
     instruction_table Table = Get8086InstructionTable();
-    
+    std::vector<instruction> Instructions;
     u32 Count = DisAsmByteCount;
     while(Count)
     {
@@ -101,8 +102,11 @@ static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
                 break;
             }
             
-            PrintInstruction(Instruction, stdout);
-            printf("\n");
+            Instructions.push_back(Instruction);
+            if(verbose) {
+                PrintInstruction(Instruction, stdout);
+                printf("\n");
+            }
         }
         else
         {
@@ -110,6 +114,11 @@ static void DisAsm8086(u32 DisAsmByteCount, segmented_access DisAsmStart)
             break;
         }
     }
+
+    return Instructions;
+}
+
+void Simulate(std::vector<instruction> Instructions) {
 }
 
 int main(int ArgCount, char **Args)
@@ -126,7 +135,7 @@ int main(int ArgCount, char **Args)
                 
                 printf("; %s disassembly:\n", FileName);
                 printf("bits 16\n");
-                DisAsm8086(BytesRead, MainMemory);
+                std::vector<instruction> Instructions = DisAsm8086(BytesRead, MainMemory, true);
             }
         }
         else
